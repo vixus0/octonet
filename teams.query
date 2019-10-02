@@ -1,0 +1,42 @@
+query(org: String!, $teamCursor: String){
+  rateLimit{
+    cost
+    limit
+    nodeCount
+    remaining
+    resetAt
+  }
+  
+  organization(login: $org) {
+    teams(first: 100, after: $teamCursor) {
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+      nodes {
+        slug
+        name
+        parentTeam {name}
+        members {
+          edges {
+            node {name, login}
+            role
+          }
+        }
+        repositories(first: 100) {
+          pageInfo {
+            endCursor
+            hasNextPage
+          }
+          edges {
+            node {
+              name
+              parent {name}
+            }
+            permission
+          }
+        }
+      }
+    }
+  }
+}
