@@ -78,21 +78,21 @@ private
 
       teams.nodes.each do |team|
         LOG.info("team: #{team.slug}")
-        @nodes.add({ 'id' => team.slug, 'group' => 1 })
+        @nodes.add({ 'id' => "team:#{team.slug}", 'label' => team.slug, 'name' => team.name, 'group' => 1 })
 
         team.members.edges.each do |edge|
           member = edge.node
           LOG.info("  member: #{member.login} '#{member.name}' #{edge.role}")
-          @nodes.add({ 'id' => member.login, 'data' => {'name' => member.name}, 'group' => 2 })
-          @links.push({ 'source' => member.login, 'target' => team.slug, 'label' => edge.role })
+          @nodes.add({ 'id' => "user:#{member.login}", 'label' => member.login, 'name' => member.name, 'group' => 2 })
+          @links.push({ 'source' => "user:#{member.login}", 'target' => "team:#{team.slug}", 'label' => edge.role })
         end
 
         team.repositories.edges.each do |edge|
           unless edge.nil? # private repos are nil I think
             repo = edge.node
             LOG.info("  repo: #{repo.name} #{edge.permission}")
-            @nodes.add({ 'id' => repo.name, 'group' => 3 })
-            @links.push({ 'source' => repo.name, 'target' => team.slug, 'label' => edge.permission })
+            @nodes.add({ 'id' => "repo:#{repo.name}", 'label' => repo.name, 'group' => 3 })
+            @links.push({ 'source' => "team:#{team.slug}", 'target' => "repo:#{repo.name}", 'label' => edge.permission })
           end
         end
 
@@ -120,8 +120,8 @@ private
       unless edge.nil?
         repo = edge.node
         LOG.info("  repo: #{repo.name} #{edge.permission}")
-        @nodes.add({ 'id' => repo.name, 'group' => 3 })
-        @links.push({ 'source' => repo.name, 'target' => vars[:teamSlug], 'label' => edge.permission })
+        @nodes.add({ 'id' => "repo:#{repo.name}", 'label' => repo.name, 'group' => 3 })
+        @links.push({ 'source' => "team:#{vars[:teamSlug]}", 'target' => "repo:#{repo.name}", 'label' => edge.permission })
       end
     end
 
