@@ -1,4 +1,4 @@
-query(org: String!, $teamCursor: String){
+query($org: String!, $teamCursor: String){
   rateLimit{
     cost
     limit
