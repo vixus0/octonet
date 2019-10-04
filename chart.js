@@ -21,7 +21,7 @@ d3.json("result.json").then(function chart(data) {
     return colors[d.type]; 
   }
 
-  const width = 2000;
+  const width = 1500;
   const height = 1500;
 
   const links = data.links.map(d => Object.create(d));
@@ -170,6 +170,16 @@ d3.json("result.json").then(function chart(data) {
     unhighlightAll("clicked");
   }
 
+  function resultMouseOver(d, i) {
+    d3.select(`circle#${d.id}`).attr("fill", "#bf616a");
+    populateInfobox(d);
+  }
+
+  function resultMouseOut(d, i) {
+    d3.select(`circle#${d.id}`).attr("fill", fill(d));
+    hideInfobox();
+  }
+
   function populateInfobox(d) {
     d3.select("#infobox").attr("data-type", d.type).attr("class", "");
     d3.select("#info-type").text(d.type);
@@ -202,7 +212,10 @@ d3.json("result.json").then(function chart(data) {
                .enter()
                .append("li")
                .attr("data-type", d => d.type)
-               .text(d => d.label);
+               .attr("data-id", d => d.id)
+               .text(d => d.label)
+               .on("mouseover", resultMouseOver)
+               .on("mouseout", resultMouseOut);
       }
     }
   }
