@@ -4,6 +4,12 @@
 <script type=text/javascript src="d3.v5.min.js"></script>
 <script type=text/javascript src="chart.js" defer></script>
 <style>
+:root {
+  --team-clr: #d08770;
+  --user-clr: #b48ead;
+  --repo-clr: #a3be8c;
+}
+
 * {
   font-family: sans-serif;
   box-sizing: border-box;
@@ -71,15 +77,71 @@ ul#search-results li:before {
 }
 
 ul#search-results li[data-type="team"]:before {
-  background-color: #d08770;
+  background-color: var(--team-clr);
 }
 
 ul#search-results li[data-type="user"]:before {
-  background-color: #b48ead;
+  background-color: var(--user-clr);
 }
 
 ul#search-results li[data-type="repo"]:before {
-  background-color: #a3be8c;
+  background-color: var(--repo-clr);
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+#infobox {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 20px;
+  width: 25%;
+  background-color: #ffffff99;
+}
+
+#info-type {
+  text-transform: uppercase;
+  font-size: 10px;
+  padding: 4px;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+#infobox[data-type="team"] #info-type {
+  background-color: var(--team-clr);
+}
+
+#infobox[data-type="user"] #info-type {
+  background-color: var(--user-clr);
+}
+
+#infobox[data-type="repo"] #info-type {
+  background-color: var(--repo-clr);
+}
+
+#infobox[data-type="team"] #info-image,
+#infobox[data-type="repo"] #info-image {
+  visibility: hidden;
+}
+
+#info-label {
+  font-size: 30px;
+  font-weight: bold;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+#info-image {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  height: 120px;
+  width: 120px;
+  border-radius: 60px;
 }
 </style>
 <body>
@@ -89,6 +151,14 @@ ul#search-results li[data-type="repo"]:before {
     <ul id="search-results">
     </ul>
   </nav>
+
+  <div id=infobox class=hidden>
+    <div id=info-type></div>
+    <div id=info-label></div>
+    <div id=info-name></div>
+    <img id="info-image" src="">
+  </div>
+
   <svg id=graph>
     <text x="50%" y="50%" font-size="40px" fill="#ccc" id="loading">Loading...</text>
   </svg>

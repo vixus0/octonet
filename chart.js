@@ -39,7 +39,8 @@ d3.json("result.json").then(function chart(data) {
       .stop();
 
   const svg_top = d3.select("svg#graph")
-      .attr("viewBox", [0, 0, width, height]);
+      .attr("viewBox", [0, 0, width, height])
+      .on("click", svgClick);
 
   const svg = svg_top.append("g");
 
@@ -96,12 +97,12 @@ d3.json("result.json").then(function chart(data) {
       .attr("fill", d => fill(d))
       .attr("cx", d => d.x)
       .attr("cy", d => d.y)
-      .on("mouseover", handleMouseOver)
-      .on("mouseout", handleMouseOut)
-      .on("click", handleClick);
+      .on("mouseover", nodeMouseOver)
+      .on("mouseout", nodeMouseOut)
+      .on("click", nodeClick);
 
   node.append("title")
-      .text(d => d.id);
+      .text(d => `${d.type}: ${d.label}`);
 
   /*
   simulation.on("tick", () => {
@@ -148,18 +149,37 @@ d3.json("result.json").then(function chart(data) {
     }
   }
 
-  function handleMouseOver(d, i) {
+  function nodeMouseOver(d, i) {
     highlight(d, d3.select(this), "hover");
+    populateInfobox(d);
   }
 
-  function handleMouseOut(d, i) {
+  function nodeMouseOut(d, i) {
     unhighlight(d3.select(this), "hover");
+    hideInfobox();
   }
 
-  function handleClick(d, i) {
+  function nodeClick(d, i) {
     const node = d3.select(this);
     unhighlightAll("clicked");
     highlight(d, node, "clicked");
+    d3.event.stopPropagation();
+  }
+
+  function svgClick(d, i) {
+    unhighlightAll("clicked");
+  }
+
+  function populateInfobox(d) {
+    d3.select("#infobox").attr("data-type", d.type).attr("class", "");
+    d3.select("#info-type").text(d.type);
+    d3.select("#info-label").text(d.label);
+    d3.select("#info-name").text(d.name);
+    d3.select("#info-image").attr("src", d.avatar);
+  }
+  
+  function hideInfobox() {
+    d3.select("#infobox").attr("class", "hidden");
   }
 
   // Search
