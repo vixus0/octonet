@@ -101,7 +101,7 @@ d3.json("result.json").then(function chart(data) {
       .on("click", handleClick);
 
   node.append("title")
-      .text(d => d.label);
+      .text(d => d.id);
 
   /*
   simulation.on("tick", () => {
@@ -117,38 +117,74 @@ d3.json("result.json").then(function chart(data) {
   });
   */
 
+  function highlight(d, node, toggle_attr) {
+    if (node.attr("select") !== "clicked") {
+      d3.selectAll(`line[source-id="${d.id}"], line[target-id="${d.id}"]`).each(function(d, i) {
+        const link = d3.select(this);
+        link.attr("select", toggle_attr)
+            .attr("stroke-width", 3);
+        d3.selectAll(`circle#${link.attr("source-id")}, circle#${link.attr("target-id")}`)
+          .attr("select", toggle_attr)
+          .attr("stroke", "#808080");
+      });
+      node.attr("select", toggle_attr)
+          .attr("stroke", "#101010");
+    }
+  }
+
+  function unhighlightAll(toggle_attr) {
+    d3.selectAll(`line[select="${toggle_attr}"]`)
+      .attr("stroke-width", 1);
+    d3.selectAll(`circle[select="${toggle_attr}"]`)
+      .attr("select", null)
+      .attr("stroke", "#fff");
+  }
+
+  function unhighlight(node, toggle_attr) {
+    if (node.attr("select") === toggle_attr) {
+      unhighlightAll(toggle_attr);
+      node.attr("select", null)
+          .attr("stroke", "#fff");
+    }
+  }
+
   function handleMouseOver(d, i) {
-    d3.selectAll(`line[source-id="${d.id}"], line[target-id="${d.id}"]`).each(function(d, i) {
-      var link = d3.select(this);
-      link.attr("selected", "true")
-          .attr("stroke-width", 3);
-      d3.selectAll(`circle#${link.attr("source-id")}, circle#${link.attr("target-id")}`)
-        .attr("stroke", "#808080");
-    });
-    d3.select(this).attr("stroke", "#101010");
-    return;
+    highlight(d, d3.select(this), "hover");
   }
 
   function handleMouseOut(d, i) {
-    d3.selectAll("line[selected]").each(function(d, i) {
-      var link = d3.select(this);
-      link.attr("selected", null)
-          .attr("stroke-width", 1);
-      d3.selectAll(`circle#${link.attr("source-id")}, circle#${link.attr("target-id")}`)
-        .attr("stroke", "#fff");
-    });
-    d3.select(this).attr("stroke", "#fff");
-    return;
+    unhighlight(d3.select(this), "hover");
   }
 
-  function handleClick(d, i) { return; }
+  function handleClick(d, i) {
+    const node = d3.select(this);
+    unhighlightAll("clicked");
+    highlight(d, node, "clicked");
+  }
 
   // Search
   const search = document.getElementById("search");
   search.addEventListener("change", searchChange);
 
   function searchChange(e) {
-    console.log(e.srcElement.value);
+    const text = e.srcElement.value.trim();
+    const results = d3.select("#search-results");
+    results.selectAll("li").remove();
+    d3.selectAll("circle").attr("fill", d => fill(d));
+
+    if (text !== "") {
+      const items = d3.selectAll("circle").filter(d => `${d.id} ${d.name}`.includes(text));
+      if (items.size() > 0) {
+        d3.selectAll("circle").attr("fill", "#d8dee9");
+        items.attr("fill", d => fill(d));
+        results.selectAll("li")
+               .data(items.data())
+               .enter()
+               .append("li")
+               .attr("data-type", d => d.type)
+               .text(d => d.label);
+      }
+    }
   }
 
   return svg.node();
