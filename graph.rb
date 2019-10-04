@@ -34,12 +34,15 @@ module Github
 end
 
 class Graph
-  attr_reader :nodes, :links
+  attr_reader :links, :teams, :members, :repos
 
   def initialize
-    @nodes = Set.new
+    @teams = {}
+    @members = {}
+    @repos = {}
     @links = []
     teams_query
+    calc_sizes
   end
 
 private
@@ -52,7 +55,7 @@ private
 
       if result.data.nil?
         if result.errors.messages['data'][0].downcase.include?('bad gateway')
-          tries = tries + 1
+          tries += 1
           LOG.warn("Got 502 Bad Gateway, retrying")
           sleep(1)
           next
@@ -78,21 +81,44 @@ private
 
       teams.nodes.each do |team|
         LOG.info("team: #{team.slug}")
-        @nodes.add({ 'id' => "team:#{team.slug}", 'label' => team.slug, 'name' => team.name, 'group' => 1 })
+
+        @teams[team.slug] = {
+          'id' => "team--#{team.slug}",
+          'type' => 'team',
+          'label' => team.slug,
+          'name' => team.name,
+          'size' => 0,
+        }
 
         team.members.edges.each do |edge|
           member = edge.node
           LOG.info("  member: #{member.login} '#{member.name}' #{edge.role}")
-          @nodes.add({ 'id' => "user:#{member.login}", 'label' => member.login, 'name' => member.name, 'group' => 2 })
-          @links.push({ 'source' => "user:#{member.login}", 'target' => "team:#{team.slug}", 'label' => edge.role })
+
+          @members[member.login] = {
+            'id' => "user--#{member.login}",
+            'type' => 'user',
+            'label' => member.login,
+            'name' => member.name,
+            'avatar' => member.avatar_url,
+            'size' => 0,
+          }
+
+          @links.push({ 'source' => "user--#{member.login}", 'target' => "team--#{team.slug}", 'label' => edge.role })
         end
 
         team.repositories.edges.each do |edge|
           unless edge.nil? # private repos are nil I think
             repo = edge.node
             LOG.info("  repo: #{repo.name} #{edge.permission}")
-            @nodes.add({ 'id' => "repo:#{repo.name}", 'label' => repo.name, 'group' => 3 })
-            @links.push({ 'source' => "team:#{team.slug}", 'target' => "repo:#{repo.name}", 'label' => edge.permission })
+
+            @repos[repo.name] = {
+              'id' => "repo--#{repo.name}",
+              'type' => 'repo',
+              'label' => repo.name,
+              'size' => 0,
+            }
+
+            @links.push({ 'source' => "team--#{team.slug}", 'target' => "repo--#{repo.name}", 'label' => edge.permission })
           end
         end
 
@@ -120,8 +146,15 @@ private
       unless edge.nil?
         repo = edge.node
         LOG.info("  repo: #{repo.name} #{edge.permission}")
-        @nodes.add({ 'id' => "repo:#{repo.name}", 'label' => repo.name, 'group' => 3 })
-        @links.push({ 'source' => "team:#{vars[:teamSlug]}", 'target' => "repo:#{repo.name}", 'label' => edge.permission })
+
+        @repos[repo.name] = {
+          'id' => "repo--#{repo.name}",
+          'type' => 'repo',
+          'label' => repo.name,
+          'size' => 0,
+        }
+
+        @links.push({ 'source' => "team--#{vars[:teamSlug]}", 'target' => "repo--#{repo.name}", 'label' => edge.permission })
       end
     end
 
@@ -129,10 +162,17 @@ private
       repos_query({ teamSlug: vars[:teamSlug], repoCursor: repos.page_info.end_cursor })
     end
   end
+
+  def calc_sizes
+    @teams.keys.each { |team| @teams[team]['size'] = @links.map { |link| link['source'] }.grep("team--#{team}").size }
+    @members.keys.each { |member| @members[member]['size'] = @links.map { |link| link['source'] }.grep("user--#{member}").size }
+  end
 end
 
 graph = Graph.new
 puts JSON.dump({
-  'nodes': graph.nodes.to_a,
+  'teams': graph.teams.values,
+  'members': graph.members.values,
+  'repos': graph.repos.values,
   'links': graph.links
 })

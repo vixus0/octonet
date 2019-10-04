@@ -19,7 +19,7 @@ query($org: String!, $teamCursor: String){
         parentTeam {name}
         members {
           edges {
-            node {name, login}
+            node {name, login, avatarUrl(size: 128)}
             role
           }
         }

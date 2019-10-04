@@ -8,17 +8,43 @@
 
 <script>
 d3.json("result.json").then(function chart(data) {
+  function size(d) {
+    return 5 + Math.log(d.size*2 + 1);
+  }
+
+  function radial(d) {
+    const radii = {
+      "team": 200,
+      "user": 400,
+      "repo": 0
+    }
+    return radii[d.type];
+  }
+
+  function fill(d) {
+    const colors = {
+      "team": "#d08770",
+      "user": "#b48ead",
+      "repo": "#a3be8c"
+    }
+    return colors[d.type]; 
+  }
+
   const width = 2000;
   const height = 1500;
 
   const links = data.links.map(d => Object.create(d));
-  const nodes = data.nodes.map(d => Object.create(d));
+  const teams = data.teams.map(d => Object.create(d));
+  const members = data.members.map(d => Object.create(d));
+  const repos = data.repos.map(d => Object.create(d));
+  const nodes = teams.concat(members, repos);
 
   const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).id(d => d.id))
-      .force("charge", d3.forceManyBody())
+      .force("collide", d3.forceCollide(d => size(d)))
+      .force("charge", d3.forceManyBody(-30))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("radial", d3.forceRadial(100, width/2, height/2));
+      .force("radial", d3.forceRadial(d => radial(d), width/2, height/2));
 
   const svg = d3.select("svg#graph")
       .attr("viewBox", [0, 0, width, height]);
@@ -26,22 +52,48 @@ d3.json("result.json").then(function chart(data) {
   const link = svg.append("g")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0.6)
-    .selectAll("line")
-    .data(links)
-    .join("line")
-      .attr("stroke-width", d => Math.sqrt(d.value));
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("source-id", d => d.source.id)
+      .attr("target-id", d => d.target.id)
+      .attr("stroke-width", 1);
+
+  /*
+  // Avatars
+  const defs = svg.append('defs')
+      .selectAll("pattern")
+      .data(members)
+      .enter()
+      .append("pattern")
+      .attr("id", d => d.id)
+      .attr("width", d => size(d))
+      .attr("height", d => size(d))
+      .attr("patternUnits", "userSpaceOnUse")
+      .append("image")
+      .attr("xlink:href", d => d.avatar)
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("preserveAspectRatio", "xMinYMin")
+      .attr("x", 0)
+      .attr("y", 0);
+      */
 
   const node = svg.append("g")
       .attr("stroke", "#fff")
       .attr("stroke-width", 1.5)
-    .selectAll("circle")
-    .data(nodes)
-    .join("circle")
-      .attr("r", 5)
-      .attr("fill", d => d3.schemeCategory10[d.group]);
+      .selectAll("circle")
+      .data(nodes)
+      .join("circle")
+      .attr("id", d => d.id)
+      .attr("r", d => size(d))
+      .attr("fill", d => fill(d))
+      .on("mouseover", handleMouseOver)
+      .on("mouseout", handleMouseOut)
+      .on("click", handleClick);
 
   node.append("title")
-      .text(d => d.id);
+      .text(d => d.label);
 
   simulation.on("tick", () => {
     link
@@ -54,6 +106,32 @@ d3.json("result.json").then(function chart(data) {
         .attr("cx", d => d.x)
         .attr("cy", d => d.y);
   });
+
+  function handleMouseOver(d, i) {
+    d3.selectAll(`line[source-id="${d.id}"], line[target-id="${d.id}"]`).each(function(d, i) {
+      var link = d3.select(this);
+      link.attr("selected", "true")
+          .attr("stroke-width", 3);
+      d3.selectAll(`circle#${link.attr("source-id")}, circle#${link.attr("target-id")}`)
+        .attr("stroke", "#808080");
+    });
+    d3.select(this).attr("stroke", "#101010");
+    return;
+  }
+
+  function handleMouseOut(d, i) {
+    d3.selectAll("line[selected]").each(function(d, i) {
+      var link = d3.select(this);
+      link.attr("selected", null)
+          .attr("stroke-width", 1);
+      d3.selectAll(`circle#${link.attr("source-id")}, circle#${link.attr("target-id")}`)
+        .attr("stroke", "#fff");
+    });
+    d3.select(this).attr("stroke", "#fff");
+    return;
+  }
+
+  function handleClick(d, i) { return; }
 
   return svg.node();
 })
