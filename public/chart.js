@@ -123,7 +123,8 @@ d3.json("graph.json").then(function chart(data) {
       d3.selectAll(`line[source-id="${d.id}"], line[target-id="${d.id}"]`).each(function(d, i) {
         const link = d3.select(this);
         link.attr("select", toggle_attr)
-            .attr("stroke-width", 3);
+            .attr("stroke-width", 3)
+            .attr("stroke", "#3b4252");
         d3.selectAll(`circle#${link.attr("source-id")}, circle#${link.attr("target-id")}`)
           .attr("select", toggle_attr)
           .attr("stroke", "#808080");
@@ -135,7 +136,8 @@ d3.json("graph.json").then(function chart(data) {
 
   function unhighlightAll(toggle_attr) {
     d3.selectAll(`line[select="${toggle_attr}"]`)
-      .attr("stroke-width", 1);
+      .attr("stroke-width", 1)
+      .attr("stroke", "#999");
     d3.selectAll(`circle[select="${toggle_attr}"]`)
       .attr("select", null)
       .attr("stroke", "#fff");
