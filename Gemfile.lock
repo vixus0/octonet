@@ -15,7 +15,17 @@ GEM
     i18n (1.6.0)
       concurrent-ruby (~> 1.0)
     minitest (5.12.2)
+    mustermann (1.0.3)
+    rack (2.0.7)
+    rack-protection (2.0.7)
+      rack
+    sinatra (2.0.7)
+      mustermann (~> 1.0)
+      rack (~> 2.0)
+      rack-protection (= 2.0.7)
+      tilt (~> 2.0)
     thread_safe (0.3.6)
+    tilt (2.0.10)
     tzinfo (1.2.5)
       thread_safe (~> 0.1)
     zeitwerk (2.1.10)
@@ -25,6 +35,7 @@ PLATFORMS
 
 DEPENDENCIES
   graphql-client
+  sinatra
 
 BUNDLED WITH
    1.17.2

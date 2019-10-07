@@ -1,0 +1,4 @@
+env_vars:
+  OAUTH_CLIENT_ID: ."user-provided"[0].credentials.client_id
+  OAUTH_CLIENT_SECRET: ."user-provided"[0].credentials.client_secret
+  SESSION_SECRET: ."user-provided"[0].credentials.session_secret

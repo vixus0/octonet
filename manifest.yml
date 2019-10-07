@@ -1,0 +1,14 @@
+---
+applications:
+  - name: octonet
+    instances: 1
+    memory: 2G
+    buildpacks:
+      - https://github.com/andy-paine/env-map-buildpack.git
+      - ruby_buildpack
+    services:
+      - octonet-service
+    env:
+      HOSTNAME: https://octonet.london.cloudapps.digital
+      OAUTH_URL: https://github.com/login/oauth
+      GITHUB_ORG: alphagov

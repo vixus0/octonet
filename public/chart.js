@@ -1,4 +1,4 @@
-d3.json("result.json").then(function chart(data) {
+d3.json("graph.json").then(function chart(data) {
   function size(d) {
     return 5 + Math.log(d.size*2 + 1);
   }
