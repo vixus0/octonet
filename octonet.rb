@@ -35,7 +35,7 @@ end
 get '/', :auth => true do
   client = Octonet::Client.new(session[:token])
   client.query(Octonet::Client::TestQuery)
-  erb :index
+  erb :index, locals: { org_name: ENV.fetch('GITHUB_ORG') }
 rescue Octonet::Client::ForbiddenError => e
   LOG.info("User is forbidden")
   redirect "https://github.com/settings/connections/applications/#{settings.oauth_client_id}", 303
