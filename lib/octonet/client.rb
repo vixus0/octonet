@@ -147,6 +147,11 @@ module Octonet
           end
         end
 
+        if result.data.nil?
+          LOG.error("data was nil. result: #{result.inspect}")
+          raise StandardError, "data was nil"
+        end
+
         unless result.data.errors.nil?
           details = result.data.errors.details.to_h
 
@@ -155,11 +160,6 @@ module Octonet
             LOG.error("Access to org #{ORG} is forbidden. Message: #{message}")
             raise ForbiddenError, message
           end
-        end
-
-        if result.data.nil?
-          LOG.error("data was nil. result: #{result.inspect}")
-          raise StandardError, "data was nil"
         end
 
         return result
